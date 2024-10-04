@@ -20,6 +20,11 @@ const (
 	CALL
 )
 
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
 	l *lexer.Lexer
 
@@ -44,17 +49,12 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
-func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
-}
-
 func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) peekError(t token.TokenType) {
-	msg := fmt.Sprintf("expected new token to be %s, got %s instead", t, p.peekToken.Type)
-	p.errors = append(p.errors, msg)
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) nextToken() {
@@ -172,6 +172,11 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	}
 }
 
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("expected new token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
 }
@@ -179,11 +184,6 @@ func (p *Parser) curTokenIs(t token.TokenType) bool {
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
-
-type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func(ast.Expression) ast.Expression
-)
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
